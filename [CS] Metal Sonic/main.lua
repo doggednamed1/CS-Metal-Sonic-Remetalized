@@ -8,7 +8,7 @@
 ]]
 
 
-local TEXT_MOD_NAME = "[CS] The Metal Inisiative"
+local TEXT_MOD_NAME = "[CS] The Metal Initative"
 -- Stops mod from loading if Character Select isn't on
 if not _G.charSelectExists or not _G.customMovesExists then
     djui_popup_create("\\#ffffdc\\\n"..TEXT_MOD_NAME.."\nRequires the Character Select Mod\nto use as a Library!\n\nPlease turn on the Character Select Mod\nand Easy Custom Movesets Mod\nthen you may restart the Room!", 6)
