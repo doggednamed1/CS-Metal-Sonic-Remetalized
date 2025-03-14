@@ -7,4 +7,4 @@ X while super = Hyper form
 Need to be added:
 peelout move
 re add charge attack (prefer to have it deal damage via metal cap)
-double jump if possible.
+double jump if possible
