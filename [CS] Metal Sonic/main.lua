@@ -15,54 +15,14 @@ if not _G.charSelectExists or not _G.customMovesExists then
     return 0
 end
 
-local E_MODEL_METAL_SONIC = smlua_model_util_get_id("metals_geo") -- Located in "actors"
-local E_MODEL_MECHA_SONIC_MK2 = smlua_model_util_get_id("mechas_geo")
+local MODEL_METAL_SONIC = smlua_model_util_get_id("metals_geo") -- Located in "actors"
+local MODEL_MECHA_SONIC_MK2 = smlua_model_util_get_id("mechas_geo")
 local TEX_METAL_LIFE_ICON = get_texture_info("metals_icon") -- Located in "textures"
+local MODEL_STAR_EMERALD = smlua_model_util_get_id("star_geo")
 local TEX_MECHA_LIFE_ICON = get_texture_info("mechas_icon")
+local TEX_STAR_ICON = get_texture_info("MasterEmerald")
 -- All Located in "sound"
-local VOICETABLE_MECHA = {
-    --[CHAR_SOUND_OKEY_DOKEY] = 'StartLevel.ogg', -- Starting game
-	[CHAR_SOUND_LETS_A_GO] = 'levelmecha.ogg', -- Starting level
-	[CHAR_SOUND_PUNCH_YAH] = 'Punch1.ogg', -- Punch 1
-	[CHAR_SOUND_PUNCH_WAH] = 'Punch2.ogg', -- Punch 2
-	[CHAR_SOUND_PUNCH_HOO] = 'Punch3.ogg', -- Punch 3
-	[CHAR_SOUND_YAH_WAH_HOO] = {'jump1mecha.ogg', 'jump2mecha.ogg', 'jump3mecha.ogg'}, -- First/Second jump sounds
-	[CHAR_SOUND_HOOHOO] = 'doublejumpmecha.ogg', -- Third jump sound
-	[CHAR_SOUND_YAHOO_WAHA_YIPPEE] = {'triplejump1mecha.ogg', 'triplejump2mecha.ogg'}, -- Triple jump sounds
-	[CHAR_SOUND_UH] = 'Damaged.ogg', -- Wall bonk
-	[CHAR_SOUND_UH2] = 'Silent.ogg', -- Landing after long jump
-	[CHAR_SOUND_UH2_2] = 'Silent.ogg', -- Same sound as UH2; jumping onto ledge
-	[CHAR_SOUND_HAHA] = 'Silent.ogg', -- Landing triple jump
-	[CHAR_SOUND_YAHOO] = 'jump1mecha.ogg', -- Long jump
-	[CHAR_SOUND_DOH] = 'Damaged.ogg', -- Long jump wall bonk
-	[CHAR_SOUND_WHOA] = 'GrabLedge.ogg', -- Grabbing ledge
-	[CHAR_SOUND_EEUH] = 'Silent.ogg', -- Climbing over ledge
-	[CHAR_SOUND_WAAAOOOW] = 'Falling.ogg', -- Falling a long distance
-	[CHAR_SOUND_TWIRL_BOUNCE] = 'jump1mecha.ogg', -- Bouncing off of a flower spring
-	[CHAR_SOUND_GROUND_POUND_WAH] = 'Silent.ogg',
-	[CHAR_SOUND_HRMM] = 'GrabLedge.ogg', -- Lifting something
-	[CHAR_SOUND_HERE_WE_GO] = 'getstarmecha.ogg', -- Star get
-	[CHAR_SOUND_SO_LONGA_BOWSER] = 'mechathrow.ogg', -- Throwing Bowser
---DAMAGE
-	[CHAR_SOUND_ATTACKED] = 'Damaged.ogg', -- Damaged
-	[CHAR_SOUND_PANTING] = 'Silent.ogg', -- Low health
-	[CHAR_SOUND_ON_FIRE] = 'Burned.ogg', -- Burned
---SLEEP SOUNDS
-	[CHAR_SOUND_IMA_TIRED] = 'Silent.ogg', -- Mario feeling tired
-	[CHAR_SOUND_YAWNING] = 'Silent.ogg', -- Mario yawning before he sits down to sleep
-	[CHAR_SOUND_SNORING1] = 'Silent.ogg', -- Snore Inhale
-	[CHAR_SOUND_SNORING2] = 'Silent.ogg', -- Exhale
-	[CHAR_SOUND_SNORING3] = 'Silent.ogg', -- Sleep talking / mumbling
---COUGHING (USED IN THE GAS MAZE)
-	[CHAR_SOUND_COUGHING1] = 'Silent.ogg', -- Cough take 1
-	[CHAR_SOUND_COUGHING2] = 'Silent.ogg', -- Cough take 2
-	[CHAR_SOUND_COUGHING3] = 'Silent.ogg', -- Cough take 3
---DEATH
-	[CHAR_SOUND_DYING] = 'dyingmecha.ogg', -- Dying from damage
-	[CHAR_SOUND_DROWNING] = 'drowningmecha.ogg', -- Running out of air underwater
-	[CHAR_SOUND_MAMA_MIA] = 'LeaveLevel.ogg' -- Booted out of level
-}
-local VOICETABLE_METAL = {
+local VOICE_METAL = {
     --[CHAR_SOUND_OKEY_DOKEY] = 'StartLevel.ogg', -- Starting game
 	[CHAR_SOUND_LETS_A_GO] = 'StartLevel.ogg', -- Starting level
 	[CHAR_SOUND_PUNCH_YAH] = 'Jump1.ogg', -- Punch 1
@@ -104,7 +64,48 @@ local VOICETABLE_METAL = {
 	[CHAR_SOUND_DROWNING] = 'Drowning.ogg', -- Running out of air underwater
 	[CHAR_SOUND_MAMA_MIA] = 'Damage.ogg' -- Booted out of level
 }
-
+local VOICE_MECHA = {
+    --[CHAR_SOUND_OKEY_DOKEY] = 'StartLevel.ogg', -- Starting game
+	[CHAR_SOUND_LETS_A_GO] = 'levelmecha.ogg', -- Starting level
+	[CHAR_SOUND_PUNCH_YAH] = 'Punch1.ogg', -- Punch 1
+	[CHAR_SOUND_PUNCH_WAH] = 'Punch2.ogg', -- Punch 2
+	[CHAR_SOUND_PUNCH_HOO] = 'Punch3.ogg', -- Punch 3
+	[CHAR_SOUND_YAH_WAH_HOO] = nil, -- First/Second jump sounds
+	[CHAR_SOUND_HOOHOO] = nil, -- Third jump sound
+	[CHAR_SOUND_YAHOO_WAHA_YIPPEE] = nil, -- Triple jump sounds
+	[CHAR_SOUND_UH] = 'Damaged.ogg', -- Wall bonk
+	[CHAR_SOUND_UH2] = 'Silent.ogg', -- Landing after long jump
+	[CHAR_SOUND_UH2_2] = 'Silent.ogg', -- Same sound as UH2; jumping onto ledge
+	[CHAR_SOUND_HAHA] = 'Silent.ogg', -- Landing triple jump
+	[CHAR_SOUND_YAHOO] = 'jump1mecha.ogg', -- Long jump
+	[CHAR_SOUND_DOH] = 'Damaged.ogg', -- Long jump wall bonk
+	[CHAR_SOUND_WHOA] = 'GrabLedge.ogg', -- Grabbing ledge
+	[CHAR_SOUND_EEUH] = 'Silent.ogg', -- Climbing over ledge
+	[CHAR_SOUND_WAAAOOOW] = 'Falling.ogg', -- Falling a long distance
+	[CHAR_SOUND_TWIRL_BOUNCE] = 'jump1mecha.ogg', -- Bouncing off of a flower spring
+	[CHAR_SOUND_GROUND_POUND_WAH] = 'Silent.ogg',
+	[CHAR_SOUND_HRMM] = 'GrabLedge.ogg', -- Lifting something
+	[CHAR_SOUND_HERE_WE_GO] = 'getstarmecha.ogg', -- Star get
+	[CHAR_SOUND_SO_LONGA_BOWSER] = 'mechathrow.ogg', -- Throwing Bowser
+--DAMAGE
+	[CHAR_SOUND_ATTACKED] = 'Damaged.ogg', -- Damaged
+	[CHAR_SOUND_PANTING] = 'Silent.ogg', -- Low health
+	[CHAR_SOUND_ON_FIRE] = 'Burned.ogg', -- Burned
+--SLEEP SOUNDS
+	[CHAR_SOUND_IMA_TIRED] = 'Silent.ogg', -- Mario feeling tired
+	[CHAR_SOUND_YAWNING] = 'Silent.ogg', -- Mario yawning before he sits down to sleep
+	[CHAR_SOUND_SNORING1] = 'Silent.ogg', -- Snore Inhale
+	[CHAR_SOUND_SNORING2] = 'Silent.ogg', -- Exhale
+	[CHAR_SOUND_SNORING3] = 'Silent.ogg', -- Sleep talking / mumbling
+--COUGHING (USED IN THE GAS MAZE)
+	[CHAR_SOUND_COUGHING1] = 'Silent.ogg', -- Cough take 1
+	[CHAR_SOUND_COUGHING2] = 'Silent.ogg', -- Cough take 2
+	[CHAR_SOUND_COUGHING3] = 'Silent.ogg', -- Cough take 3
+--DEATH
+	[CHAR_SOUND_DYING] = 'dyingmecha.ogg', -- Dying from damage
+	[CHAR_SOUND_DROWNING] = 'drowningmecha.ogg', -- Running out of air underwater
+	[CHAR_SOUND_MAMA_MIA] = 'LeaveLevel.ogg' -- Booted out of level
+}
 -- All Located in "actors"
 local CAPTABLE_CHAR_MECHA = {
     normal = smlua_model_util_get_id("mechasnormal_geo"),
@@ -364,15 +365,17 @@ function hook_moves_lmao()
 end
 
 local CSloaded = false
-local function on_character_select_load()
-    MECHA_SONIC_MK2 = charSelect.character_add("Mecha Sonic MK2", {"The scourge of Mobius AND the Mushroom Kingdom!", "Custom Model by: Tromak"}, "Luogi, Garrulous64 for model, Darkly for code", {r = 0, g = 0, b = 200}, E_MODEL_MECHA_SONIC_MK2, CT_MARIO, TEX_MECHA_LIFE_ICON)
-    METAL_SONIC = _G.charSelect.character_add("Metal Sonic", {"The Blue Blur's robotic doppleganger", "M&S Winter Olympic Games DS"}, "Luogi, Warioplier for model, Darkly for code", {r = 0, g = 0, b = 200}, E_MODEL_METAL_SONIC, CT_MARIO, TEX_METAL_LIFE_ICON)
-    _G.charSelect.character_add_caps(E_MODEL_METAL_SONIC, CAPTABLE_CHAR_METAL)
-    _G.charSelect.character_add_caps(E_MODEL_MECHA_SONIC_MK2, CAPTABLE_CHAR_MECHA)
-    _G.charSelect.character_add_voice(E_MODEL_MECHA_SONIC_MK2, VOICETABLE_MECHA)
-    _G.charSelect.character_add_voice(E_MODEL_METAL_SONIC, VOICETABLE_METAL)
+function on_character_select_load()
+    METAL_SONIC = _G.charSelect.character_add("Metal Sonic", {"The Blue Blur's robotic doppleganger", "M&S Winter Olympic Games DS"}, "Luogi, Warioplier for model, Darkly for code", {r = 0, g = 0, b = 200}, MODEL_METAL_SONIC, CT_MARIO, TEX_METAL_LIFE_ICON)
+    MECHA_SONIC_MK2 = charSelect.character_add("Mecha Sonic MK2", {"The scourge of Mobius AND the Mushroom Kingdom!", "Custom Model by: Tromak"}, "Luogi, Garrulous64 for model, Darkly for code", {r = 0, g = 0, b = 200}, MODEL_MECHA_SONIC_MK2, CT_MARIO, TEX_MECHA_LIFE_ICON)
+    _G.charSelect.character_add_caps(MODEL_METAL_SONIC, CAPTABLE_CHAR_METAL)
+    _G.charSelect.character_add_caps(MODEL_MECHA_SONIC_MK2, CAPTABLE_CHAR_MECHA)
+    _G.charSelect.character_add_voice(MODEL_MECHA_SONIC_MK2, VOICE_MECHA)
+    _G.charSelect.character_add_voice(MODEL_METAL_SONIC, VOICE_METAL)
     _G.charSelect.character_hook_moveset(MECHA_SONIC_MK2, HOOK_MARIO_UPDATE, hook_moves_lmao)
     _G.charSelect.character_hook_moveset(METAL_SONIC, HOOK_MARIO_UPDATE, hook_moves_lmao)
+    _G.charSelect.character_add_celebration_star(MODEL_METAL_SONIC, nil, TEX_STAR_ICON)
+    _G.charSelect.character_add_celebration_star(MODEL_MECHA_SONIC_MK2, nil, TEX_STAR_ICON)
     if _G.customMovesExists then
         _G.customMoves.character_add({
         name = "Metal Sonic",
@@ -397,14 +400,14 @@ end
 
 local function on_character_sound(m, sound)
     if not CSloaded then return end
-    if _G.charSelect.character_get_voice(m) == VOICETABLE_METALS then return _G.charSelect.voice.sound(m, sound) end
-    if _G.charSelect.character_get_voice(m) == VOICETABLE_MECHA then return _G.charSelect.voice.sound(m, sound) end
+    if _G.charSelect.character_get_voice(m) == VOICE_METAL then return _G.charSelect.voice.sound(m, sound) end
+    if _G.charSelect.character_get_voice(m) == VOICE_MECHA then return _G.charSelect.voice.sound(m, sound) end
 end
 
 local function on_character_snore(m)
     if not CSloaded then return end
-    if _G.charSelect.character_get_voice(m) == VOICETABLE_METALS then return _G.charSelect.voice.snore(m) end
-    if _G.charSelect.character_get_voice(m) == VOICETABLE_MECHA then return _G.charSelect.voice.snore(m) end
+    if _G.charSelect.character_get_voice(m) == VOICE_METAL then return _G.charSelect.voice.snore(m) end
+    if _G.charSelect.character_get_voice(m) == VOICE_MECHA then return _G.charSelect.voice.snore(m) end
 end
 hook_chat_command("rolllock", "true/false, enables or disables rolllock for Metal Sonic", rolllock)
 hook_event(HOOK_MARIO_UPDATE, on_fall)
