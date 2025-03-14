@@ -1,4 +1,4 @@
--- name:[CS] Metal Sonic ReMetalized V2
+-- name:[CS] The Metal Initiative V2
 -- description: The Blue Blur's robotic doppleganger\n\n\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character
 --[[
     API Documentation for Character Select can be found below:
@@ -8,7 +8,7 @@
 ]]
 
 
-local TEXT_MOD_NAME = "[CS] Metal Sonic ReMetalized"
+local TEXT_MOD_NAME = "[CS] The Metal Inisiative"
 -- Stops mod from loading if Character Select isn't on
 if not _G.charSelectExists or not _G.customMovesExists then
     djui_popup_create("\\#ffffdc\\\n"..TEXT_MOD_NAME.."\nRequires the Character Select Mod\nto use as a Library!\n\nPlease turn on the Character Select Mod\nand Easy Custom Movesets Mod\nthen you may restart the Room!", 6)
@@ -18,7 +18,6 @@ end
 local MODEL_METAL_SONIC = smlua_model_util_get_id("metals_geo") -- Located in "actors"
 local MODEL_MECHA_SONIC_MK2 = smlua_model_util_get_id("mechas_geo")
 local TEX_METAL_LIFE_ICON = get_texture_info("metals_icon") -- Located in "textures"
-local MODEL_STAR_EMERALD = smlua_model_util_get_id("star_geo")
 local TEX_MECHA_LIFE_ICON = get_texture_info("mechas_icon")
 local TEX_STAR_ICON = get_texture_info("MasterEmerald")
 -- All Located in "sound"
