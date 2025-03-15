@@ -357,12 +357,13 @@ function on_fall(m)
 end
 
 function hook_moves_lmao()
-    on_metal_jump()
-    noSwimAllowed()
-    use_spindash()
-    on_fall()
+	if METAL_SONIC == charSelect.character_get_current_number() or MECHA_SONIC_MK2 == charSelect.character_get_current_number() then
+    		on_metal_jump()
+    		noSwimAllowed()
+    		use_spindash()
+    		on_fall()
+	end
 end
-
 local CSloaded = false
 function on_character_select_load()
     METAL_SONIC = _G.charSelect.character_add("Metal Sonic", {"The Blue Blur's robotic doppleganger", "M&S Winter Olympic Games DS"}, "Luogi, Warioplier for model, Darkly for code", {r = 0, g = 0, b = 200}, MODEL_METAL_SONIC, CT_MARIO, TEX_METAL_LIFE_ICON)
