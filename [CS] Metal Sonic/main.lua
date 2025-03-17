@@ -250,8 +250,8 @@ function act_sonic_slide(m)
 		set_anim_to_frame(m, e.animFrame)
 	end
 
-	if (m.input & INPUT_B_PRESSED) ~= 0 then
-		set_mario_action(m, ACT_METAL_CHARGE, 0)
+	if (m.input & INPUT_A_PRESSED) ~= 0 then
+		set_mario_action(m, METAL_SONIC_JUMP, 0)
 	end
 
 	m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x600, 0x600)
