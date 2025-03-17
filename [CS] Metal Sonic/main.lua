@@ -1,4 +1,4 @@
--- name:[CS] The Metal Initiative V2
+-- name:[CS] Metal Sonic ReMetalized V2
 -- description: The Blue Blur's robotic doppleganger\n\n\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character
 --[[
     API Documentation for Character Select can be found below:
@@ -8,7 +8,7 @@
 ]]
 
 
-local TEXT_MOD_NAME = "[CS] The Metal Initative"
+local TEXT_MOD_NAME = "[CS] Metal Sonic ReMetalized"
 -- Stops mod from loading if Character Select isn't on
 if not _G.charSelectExists or not _G.customMovesExists then
     djui_popup_create("\\#ffffdc\\\n"..TEXT_MOD_NAME.."\nRequires the Character Select Mod\nto use as a Library!\n\nPlease turn on the Character Select Mod\nand Easy Custom Movesets Mod\nthen you may restart the Room!", 6)
@@ -18,6 +18,7 @@ end
 local MODEL_METAL_SONIC = smlua_model_util_get_id("metals_geo") -- Located in "actors"
 local MODEL_MECHA_SONIC_MK2 = smlua_model_util_get_id("mechas_geo")
 local TEX_METAL_LIFE_ICON = get_texture_info("metals_icon") -- Located in "textures"
+local MODEL_STAR_EMERALD = smlua_model_util_get_id("star_geo")
 local TEX_MECHA_LIFE_ICON = get_texture_info("mechas_icon")
 local TEX_STAR_ICON = get_texture_info("MasterEmerald")
 -- All Located in "sound"
@@ -166,11 +167,12 @@ local math_sqrt, math_min, math_max, math_floor = math.sqrt, math.min, math.max,
 local function limit_angle(a)
     return (a + 0x8000) % 0x10000 - 0x8000
 end
+local peeloutrelease = audio_sample_load("peeloutrelease.mp3")
+local peeloutcharge = audio_sample_load("peeloutcharge.ogg")
 local jumpsound = audio_sample_load("jump.ogg")
 ACT_METAL_CROUCH = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX)
 ACT_METAL_CHARGE = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_INVULNERABLE | ACT_FLAG_ATTACKING)
 ACT_METAL_SLIDE = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE)
-ACT_PEELOUT = allocate_mario_action(ACT_GROUP_STATIONARY)
 local spindashInput = Z_TRIG
 CHAR_ANIM_SONIC_SLIDE = 140
 local peeloutcharge = audio_sample_load("peeloutcharge.ogg")
@@ -191,42 +193,26 @@ local function limit_angle(a)
     return (a + 0x8000) % 0x10000 - 0x8000
 end
 
-function act_sonic_crouch(m)
-    local b = m.marioBodyState
-    local e = gStateExtras[m.playerIndex]
-    stationary_ground_step(m)
-    if m.controller.buttonDown & Z_TRIG == 0 then
-      set_mario_action(m, ACT_STOP_CROUCHING, 0)
-    end
-    if m.controller.buttonPressed & A_BUTTON ~= 0 then
-      set_mario_action(m, ACT_SONIC_CHARGE, 0)
-    end
-    b.allowPartRotation = 1
-    return 0
-end
-
+local m = gMarioStates[0]
+local e = gStateExtras[m.playerIndex]
+local b = m.marioBodyState
+e.animFrame = 0
+e.spincharge = 0
 function act_sonic_charge(m)
-    local b = m.marioBodyState
-    local e = gStateExtras[m.playerIndex]
     stationary_ground_step(m)
-    if m.controller.buttonDown & Z_TRIG == 0 and e.spincharge < 10 then
+    if m.controller.buttonPressed ~= B_BUTTON and e.spincharge < 10 then
       set_mario_action(m, ACT_STOP_CROUCHING, 0)
-    end
-    if m.controller.buttonDown & Z_TRIG == 0 and e.spincharge > 9 then
+    elseif m.controller.buttonPressed ~= B_BUTTON and e.spincharge > 9 then
       set_mario_action(m, ACT_METAL_SLIDE, 0)
       m.forwardVel = e.spincharge*1.1
     end
-    if m.controller.buttonPressed & A_BUTTON ~= 0 then
       e.spincharge = e.spincharge + 10
       if e.spincharge > 100 then
          e.spincharge = 100
       end
-      else
       if e.spincharge > 0 then
          e.spincharge = e.spincharge - 1
       end
-    end
-
       smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
       e.animFrame = e.animFrame + 1 + e.spincharge/150
       if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
@@ -236,12 +222,10 @@ function act_sonic_charge(m)
 
     return 0
 end
-
+local e = gStateExtras[m.playerIndex]
+e.animFrame = 0
+m.marioObj.header.gfx.animInfo.curAnim.loopEnd = 0
 function act_sonic_slide(m)
-    local e = gStateExtras[m.playerIndex]
-
-	set_mario_animation(m, CHAR_ANIM_SONIC_SLIDE)
-
 	mario_set_forward_vel(m, m.forwardVel - 0.5)
 	if m.forwardVel < 1 then
 		set_mario_action(m, ACT_IDLE, 0)
@@ -257,17 +241,17 @@ function act_sonic_slide(m)
     end
 	m.particleFlags = m.particleFlags | PARTICLE_DUST
 
-	if m.character.type == 0 or 1 or 2 or 3 or 4 then
-		smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
-		set_anim_to_frame(m, e.animFrame)
+	if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
 		if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
 			e.animFrame = e.animFrame - m.marioObj.header.gfx.animInfo.curAnim.loopEnd
 		end
 		e.animFrame = e.animFrame + 2 * (m.forwardVel / 95)
+		smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
+		set_anim_to_frame(m, e.animFrame)
 	end
 
-	if (m.input & INPUT_A_PRESSED) ~= 0 then
-		set_mario_action(m, rolllockSpindash, 0)
+	if (m.input & INPUT_B_PRESSED) ~= 0 then
+		set_mario_action(m, ACT_METAL_CHARGE, 0)
 	end
 
 	m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x600, 0x600)
@@ -279,8 +263,6 @@ function act_sonic_slide(m)
     m.actionTimer = m.actionTimer + 1
     return
 end
-
-hook_mario_action(ACT_METAL_CROUCH, act_sonic_crouch)
 hook_mario_action(ACT_METAL_CHARGE, act_sonic_charge)
 hook_mario_action(ACT_METAL_SLIDE, act_sonic_slide, INT_KICK)
 
@@ -294,15 +276,6 @@ function convert_s16(num)
         num = min + (num - max)
     end
     return num
-end
-
-function use_spindash(m)
-    if m.playerIndex ~= 0 then return end
-    if m.action == ACT_CROUCH then
-        set_mario_action(m, ACT_METAL_CROUCH, 0)
-    elseif m.action == ACT_METAL_CROUCH and m.controller.buttonPressed == A_BUTTON and m.action ~= ACT_FLAG_AIR then
-        set_mario_action(m, ACT_METAL_CHARGE, 0)
-    end
 end
 
 local METAL_SONIC_JUMP = allocate_mario_action(
@@ -326,8 +299,8 @@ function on_metal_jump(m)
     if m.playerIndex ~= 0 then return end
     if (m.action == ACT_JUMP or m.action == ACT_TRIPLE_JUMP) then
         set_mario_action(m, METAL_SONIC_JUMP, 0)
-    elseif (m.controller.buttonPressed == Z_TRIG) then
-        set_mario_action(m, ACT_GROUND_POUND, 0)
+    --elseif (m.controller.buttonPressed == Z_TRIG) then
+    --    set_mario_action(m, ACT_GROUND_POUND, 0)
     end
 end
 hook_mario_action(METAL_SONIC_JUMP, metal_jump)
@@ -341,28 +314,218 @@ function noSwimAllowed(m)
         m.flags = m.flags & ~MARIO_METAL_CAP
     end
 end
-function use_spindash(m)
-    local m = gMarioStates[0]
-    if m.playerIndex ~= 0 then return end
-    if m.controller.buttonPressed == Z_TRIG then
-        set_mario_action(m, ACT_METAL_CROUCH, 0)
-    elseif m.action == ACT_METAL_CROUCH and m.controller.buttonPressed == A_BUTTON then
-        set_mario_action(m, ACT_METAL_CHARGE, 0)
-    end
-end
+
 function on_fall(m)
     local m = gMarioStates[0]
     if m.playerIndex ~= 0 then return end
     m.peakHeight = m.pos.y
 end
+function use_spindash(m)
+    if m.playerIndex ~= 0 then return end
+    if m.controller.buttonPressed == B_BUTTON then
+        set_mario_action(m, ACT_METAL_CHARGE, 0)
+    end
+end
+local peeloutinput = U_JPAD
 
-function hook_moves_lmao()
-	if METAL_SONIC == charSelect.character_get_current_number() or MECHA_SONIC_MK2 == charSelect.character_get_current_number() then
-    		on_metal_jump()
-    		noSwimAllowed()
-    		use_spindash()
-    		on_fall()
-	end
+local METAL_PEELOUT = allocate_mario_action(ACT_GROUP_STATIONARY)
+
+gStateExtras = {}
+for i = 0, (MAX_PLAYERS - 1) do
+    gStateExtras[i] = {}
+    local e = gStateExtras[i]
+    e.animation = 0
+    e.animSpeed = 1
+end
+
+--- @param m MarioState
+local function spawn_terrain_particles(m)
+
+    if (m.terrainSoundAddend == (SOUND_TERRAIN_WATER << 16)) then
+
+            set_mario_particle_flags(m, PARTICLE_SHALLOW_WATER_SPLASH, 0);
+
+    else
+        if (m.terrainSoundAddend == (SOUND_TERRAIN_SAND << 16)) then
+            set_mario_particle_flags(m, PARTICLE_DIRT, 0);
+        elseif (m.terrainSoundAddend == (SOUND_TERRAIN_SNOW << 16)) then
+            set_mario_particle_flags(m, PARTICLE_SNOW, 0);
+        end
+    end
+end
+
+local function act_peelout(m)
+    local stepResult = perform_ground_step(m)
+    local s = gPlayerSyncTable[m.playerIndex]
+    local e = gStateExtras[m.playerIndex]
+    if stepResult ~= GROUND_STEP_LEFT_GROUND then
+        m.vel.y = 0
+    else
+        mario_set_forward_vel(m, m.forwardVel)
+        s.lastPosX = m.pos.x
+        s.lastPosZ = m.pos.z
+        if (m.input & (INPUT_NONZERO_ANALOG)) ~= 0 then
+            if analog_stick_held_back(m) ~= 0 then
+                m.faceAngle.y = m.faceAngle.y + 0x8000
+                m.forwardVel = -m.forwardVel
+                if m.forwardVel < 0 then
+                end
+            elseif m.forwardVel < 10 then
+                m.forwardVel = m.forwardVel + 1
+            end
+        end
+    end
+
+    if m.actionTimer == 0 then
+        s.spinrev = 0
+        s.lastPosX = m.pos.x
+        s.lastPosZ = m.pos.z
+        audio_sample_play(peeloutcharge, m.pos, 1)
+    end
+    if m.pos.y == m.floorHeight then
+        play_step_sound(m, 9, 45)
+        m.pos.x = s.lastPosX
+        m.pos.z = s.lastPosZ
+        m.marioObj.header.gfx.pos.x = s.lastPosX
+        m.marioObj.header.gfx.pos.y = m.pos.y
+        m.marioObj.header.gfx.pos.z = s.lastPosZ
+    end
+
+    if m.pos.y == m.floorHeight then
+        if m.controller.buttonPressed & peeloutinput ~= 0 then
+            audio_sample_play(peeloutrelease, m.pos, 1)
+            set_mario_action(m, ACT_WALKING, 0)
+            mario_set_forward_vel(m, 100)
+            m.forwardVel = s.spinrev
+            prevForwardVel = s.spinrev
+            set_camera_shake_from_hit(SHAKE_MED_DAMAGE)
+            set_camera_shake_from_point(SHAKE_POS_MEDIUM, m.pos.x, m.pos.y, m.pos.z)
+            m.particleFlags = m.particleFlags | PARTICLE_VERTICAL_STAR
+            s.spinrev = 0
+        end
+        if m.pos.y < m.waterLevel - 100 then
+            if s.spinrev >= 80 then
+                s.spinrev = 80
+            end
+        end
+        if s.spinrev < 128 then
+            s.spinrev = s.spinrev + 5
+        end
+
+
+
+        if s.spinrev >= 128 and m.actionTimer % 2 == 0 then
+            spawn_terrain_particles(m)
+        elseif s.spinrev >= 64 and s.spinrev < 128 and m.actionTimer % 3 == 0 then
+            spawn_terrain_particles(m)
+        elseif s.spinrev >= 64 and (m.actionTimer % 5 < 4) then
+            set_mario_particle_flags(m, PARTICLE_DUST, 0);
+        end
+    end
+
+    m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x300, 0x300)
+    set_mario_anim_with_accel(m, e.animation, s.spinrev / 5 * e.animSpeed)
+    SetRunAnims(m, s.spinrev, s.spinrev)
+    m.actionTimer = m.actionTimer + 1
+end
+
+function SetRunAnims(m, Speed, NegSpeed)
+    local e = gStateExtras[m.playerIndex]
+
+    if Speed < 50 and Speed > 0 then
+        e.animation = CHAR_ANIM_RUNNING_UNUSED
+    elseif Speed >= 50 and Speed < 124 then
+        e.animation = CHAR_ANIM_RUNNING
+    elseif Speed >= 124 then
+        e.animation = CHAR_ANIM_RUNNING
+    end
+
+    if NegSpeed > -50 and NegSpeed < -0 then
+        e.animation = CHAR_ANIM_RUNNING_UNUSED
+    elseif NegSpeed <= -50 and Speed > -124 then
+        e.animation = CHAR_ANIM_RUNNING
+    elseif NegSpeed <= -124 then
+        e.animation = CHAR_ANIM_RUNNING
+    end
+
+    if e.animation == CHAR_ANIM_RUNNING_UNUSED then
+        e.animSpeed = 0x10000
+    elseif e.animation ~= CHAR_ANIM_RUNNING then
+        e.animSpeed = 0x7000
+    elseif e.animation == CHAR_ANIM_RUNNING then
+        e.animSpeed = 0x10000
+    end
+end
+
+local prevForwardVel = 0
+function update_walk_speed_without_max_cap(m)
+    local maxTargetSpeed = m.floor ~= nil and m.floor.type == SURFACE_SLOW and 24 or 32
+    local targetSpeed = math.min(m.intendedMag, maxTargetSpeed)
+    if m.quicksandDepth > 10.0 then
+        targetSpeed = (targetSpeed * 6.25) / m.quicksandDepth
+    end
+
+    if m.forwardVel <= 0.0 then
+        m.forwardVel = m.forwardVel + 1.1
+    elseif m.forwardVel <= targetSpeed then
+        m.forwardVel = m.forwardVel + 1.1 - m.forwardVel / 43;
+    elseif m.floor ~= nil and m.floor.normal.y >= 0.95 then
+        m.forwardVel = m.forwardVel - 0.5
+    end
+
+    apply_slope_accel(m);
+end
+
+local peelOutAfter = false
+function update_peel_out_after(m)
+    if m.prevAction == METAL_PEELOUT then
+        peelOutAfter = true
+    end
+    if peelOutAfter and m.action ~= ACT_WALKING and m.action ~= ACT_BRAKING then
+        peelOutAfter = false
+    end
+end
+
+function on_peelout(m)
+    local m = gMarioStates[0]
+    if m.playerIndex ~= 0 then
+        return
+    end
+
+    if m.action & ACT_FLAG_IDLE ~= 0 and m.controller.buttonPressed & peeloutinput ~= 0 then
+        set_mario_action(m, METAL_PEELOUT, 0)
+    elseif (m.action == ACT_BRAKING_STOP or m.action == ACT_BRAKING or m.action == ACT_DECELERATING) and m.controller.buttonPressed & peeloutinput ~= 0 and m.forwardVel < 16 then
+        m.forwardVel = 0
+        set_mario_action(m, METAL_PEELOUT, 0)
+    end
+
+    update_peel_out_after(m)
+
+    if peelOutAfter and m.action == ACT_WALKING and prevForwardVel > 48 then
+        m.forwardVel = prevForwardVel
+        update_walk_speed_without_max_cap(m)
+    end
+    prevForwardVel = m.forwardVel
+
+end
+hook_mario_action(METAL_PEELOUT, act_peelout)
+
+local function before_phys(m)
+    if peelOutAfter and m.action == ACT_WALKING and prevForwardVel > 48  then
+        mario_set_forward_vel(m,prevForwardVel)
+    end
+end
+hook_event(HOOK_BEFORE_PHYS_STEP, before_phys)
+
+
+function hook_moves_lmao(m)
+    if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
+        on_peelout(m)
+        on_metal_jump(m)
+        noSwimAllowed(m)
+        use_spindash(m)
+        on_fall(m)
+    end
 end
 local CSloaded = false
 function on_character_select_load()
