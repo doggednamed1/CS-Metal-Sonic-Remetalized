@@ -5,9 +5,9 @@ Metals Moves:
 
 B = Instant Spindash
 
-U-Dpad = Charge Peelout
+Up Dpad = Charge Peelout
 
-U-Dpad again = Release Peelout(HINT: HOLD MOVE STICK FOR FULL PEELOUT)
+Up Dpad again = Release Peelout(HINT: HOLD MOVE STICK FOR FULL PEELOUT)
 
 Y in air and doing double jump = Superform if super forms reborn is enabled
 
