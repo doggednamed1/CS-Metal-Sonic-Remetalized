@@ -3,7 +3,11 @@ This is the homepage for metal sonic and his "friends"
 
 Metals Moves:
 
-Z + Spam A = spindash
+B = Instant Spindash
+
+U-Dpad = Charge Peelout
+
+U-Dpad again = Release Peelout(HINT: HOLD MOVE STICK FOR FULL PEELOUT)
 
 Y in air and doing double jump = Superform if super forms reborn is enabled
 
