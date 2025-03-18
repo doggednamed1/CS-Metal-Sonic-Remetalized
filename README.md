@@ -21,4 +21,4 @@ Need to be added:
 
 re add charge attack (prefer to have it deal damage via metal cap)
 
-double jump if possible
+in air jump if possible
