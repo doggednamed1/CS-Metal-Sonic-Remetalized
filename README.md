@@ -19,8 +19,6 @@ same as metals for now...
 
 Need to be added:
 
-peelout move
-
 re add charge attack (prefer to have it deal damage via metal cap)
 
 double jump if possible
