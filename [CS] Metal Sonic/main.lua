@@ -1,5 +1,5 @@
--- name:[CS] Metal Sonic ReMetalized V2
--- description: The Blue Blur's robotic doppleganger\n\n\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character
+-- name:[CS] The Metal Initiative V2
+-- description:\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character
 --[[
     API Documentation for Character Select can be found below:
     https://github.com/Squishy6094/character-select-coop/wiki/API-Documentation
@@ -8,7 +8,7 @@
 ]]
 
 
-local TEXT_MOD_NAME = "[CS] Metal Sonic ReMetalized"
+local TEXT_MOD_NAME = "[CS] The Metal Initiative"
 -- Stops mod from loading if Character Select isn't on
 if not _G.charSelectExists or not _G.customMovesExists then
     djui_popup_create("\\#ffffdc\\\n"..TEXT_MOD_NAME.."\nRequires the Character Select Mod\nto use as a Library!\n\nPlease turn on the Character Select Mod\nand Easy Custom Movesets Mod\nthen you may restart the Room!", 6)
