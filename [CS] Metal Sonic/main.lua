@@ -1,5 +1,5 @@
 -- name:[CS] The Metal Initiative V2
--- description:\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character
+-- description:\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character pack
 --[[
     API Documentation for Character Select can be found below:
     https://github.com/Squishy6094/character-select-coop/wiki/API-Documentation
