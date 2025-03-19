@@ -18,6 +18,6 @@ Mechas Moves:
 same as metals for now...
 
 Need to be added:<br/>
-[x] Add a peelout move
-[] Re-add charge attack (prefer to have it deal damage via metal cap)
+[x] Add a peelout move<br/>
+[] Re-add charge attack (prefer to have it deal damage via metal cap)<br/>
 [] In air jump if possible
