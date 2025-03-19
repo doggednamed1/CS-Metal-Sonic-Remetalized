@@ -143,6 +143,10 @@ local healthMeter = {
     [8] = get_texture_info("metalhud-8"),
     }
 }
+
+local METAL_SONIC_JUMP = allocate_mario_action(
+ACT_GROUP_AIRBORNE | ACT_FLAG_MOVING | ACT_FLAG_AIR | ACT_FLAG_CONTROL_JUMP_HEIGHT | ACT_FLAG_ALLOW_VERTICAL_WIND_ACTION | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_ATTACKING)
+
 local rolllockSpindash
 function rolllock(msg)
     if msg == "true" then
@@ -265,8 +269,6 @@ function convert_s16(num)
     return num
 end
 
-local METAL_SONIC_JUMP = allocate_mario_action(
-ACT_GROUP_AIRBORNE | ACT_FLAG_MOVING | ACT_FLAG_AIR | ACT_FLAG_CONTROL_JUMP_HEIGHT | ACT_FLAG_ALLOW_VERTICAL_WIND_ACTION | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_ATTACKING)
 --- @param m MarioState
 function metal_jump(m)
     local mo = m.marioObj
