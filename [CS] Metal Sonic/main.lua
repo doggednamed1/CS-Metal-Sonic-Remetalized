@@ -164,19 +164,12 @@ for i = 0, (MAX_PLAYERS - 1) do
 end
 local math_sqrt, math_min, math_max, math_floor = math.sqrt, math.min, math.max, math.floor
 
-local function limit_angle(a)
-    return (a + 0x8000) % 0x10000 - 0x8000
-end
-local peeloutrelease = audio_sample_load("peeloutrelease.mp3")
-local peeloutcharge = audio_sample_load("peeloutcharge.ogg")
 local jumpsound = audio_sample_load("jump.ogg")
 ACT_METAL_CROUCH = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX)
 ACT_METAL_CHARGE = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_INVULNERABLE | ACT_FLAG_ATTACKING)
 ACT_METAL_SLIDE = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE)
 local spindashInput = Z_TRIG
 CHAR_ANIM_SONIC_SLIDE = 140
-local peeloutcharge = audio_sample_load("peeloutcharge.ogg")
-local peeloutrelease = audio_sample_load("peeloutrelease.mp3")
 gStateExtras = {}
 for i = 0, (MAX_PLAYERS - 1) do
     gStateExtras[i] = {}
@@ -187,17 +180,11 @@ for i = 0, (MAX_PLAYERS - 1) do
     e.animFrame = 0
 end
 
-local math_sqrt, math_min, math_max, math_floor = math.sqrt, math.min, math.max, math.floor
-
-local function limit_angle(a)
-    return (a + 0x8000) % 0x10000 - 0x8000
-end
-
 local m = gMarioStates[0]
 local e = gStateExtras[m.playerIndex]
-local b = m.marioBodyState
 e.animFrame = 0
 e.spincharge = 0
+--- @param m MarioState
 function act_sonic_charge(m)
     stationary_ground_step(m)
     if m.controller.buttonPressed ~= B_BUTTON and e.spincharge < 10 then
@@ -280,6 +267,7 @@ end
 
 local METAL_SONIC_JUMP = allocate_mario_action(
 ACT_GROUP_AIRBORNE | ACT_FLAG_MOVING | ACT_FLAG_AIR | ACT_FLAG_CONTROL_JUMP_HEIGHT | ACT_FLAG_ALLOW_VERTICAL_WIND_ACTION | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_ATTACKING)
+--- @param m MarioState
 function metal_jump(m)
     local mo = m.marioObj
     if (m.actionTimer == 0) then
@@ -294,18 +282,17 @@ function metal_jump(m)
     m.actionTimer = m.actionTimer + 1
 end
 
+--- @param m MarioState
 function on_metal_jump(m)
     local m = gMarioStates[0]
     if m.playerIndex ~= 0 then return end
     if (m.action == ACT_JUMP or m.action == ACT_TRIPLE_JUMP) then
         set_mario_action(m, METAL_SONIC_JUMP, 0)
-    --elseif (m.controller.buttonPressed == Z_TRIG) then
-    --    set_mario_action(m, ACT_GROUND_POUND, 0)
     end
 end
 hook_mario_action(METAL_SONIC_JUMP, metal_jump)
 
-
+--- @param m MarioState
 function noSwimAllowed(m)
     local m = gMarioStates[0]
     if ((m.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) then
@@ -315,11 +302,14 @@ function noSwimAllowed(m)
     end
 end
 
+--- @param m MarioState
 function on_fall(m)
     local m = gMarioStates[0]
     if m.playerIndex ~= 0 then return end
     m.peakHeight = m.pos.y
 end
+
+--- @param m MarioState
 function use_spindash(m)
     if m.playerIndex ~= 0 then return end
     if m.controller.buttonPressed == B_BUTTON then
@@ -327,6 +317,8 @@ function use_spindash(m)
     end
 end
 
+
+--- @param m MarioState
 function hook_moves_lmao(m)
     if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
         on_metal_jump(m)
