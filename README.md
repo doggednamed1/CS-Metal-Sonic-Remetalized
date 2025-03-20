@@ -1,7 +1,7 @@
 # [CS] The Metal Initiative
 This is the homepage for metal sonic and his "friends"
 
-Metals Moves:
+- Metals Moves:
 
 B = Instant Spindash
 
@@ -19,7 +19,7 @@ While rolling off a ledge = Temporary Hover
 
 A while in Temporary Hover = In air jump
 
-Mechas Moves:
+- Mechas Moves:
 
 B = Spammable Instant Spindash
 
