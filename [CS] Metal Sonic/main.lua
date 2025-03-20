@@ -25,9 +25,9 @@ local TEX_STAR_ICON = get_texture_info("MasterEmerald")
 local VOICE_METAL = {
     --[CHAR_SOUND_OKEY_DOKEY] = 'StartLevel.ogg', -- Starting game
 	[CHAR_SOUND_LETS_A_GO] = 'StartLevel.ogg', -- Starting level
-	[CHAR_SOUND_PUNCH_YAH] = 'Jump1.ogg', -- Punch 1
-	[CHAR_SOUND_PUNCH_WAH] = 'Jump2.ogg', -- Punch 2
-	[CHAR_SOUND_PUNCH_HOO] = 'Jump3.ogg', -- Punch 3
+	[CHAR_SOUND_PUNCH_YAH] = nil, -- Punch 1
+	[CHAR_SOUND_PUNCH_WAH] = nil, -- Punch 2
+	[CHAR_SOUND_PUNCH_HOO] = nil, -- Punch 3
 	[CHAR_SOUND_YAH_WAH_HOO] = nil,
 	[CHAR_SOUND_HOOHOO] = nil,
 	[CHAR_SOUND_YAHOO_WAHA_YIPPEE] = nil, -- Triple jump sounds
@@ -67,9 +67,9 @@ local VOICE_METAL = {
 local VOICE_MECHA = {
     --[CHAR_SOUND_OKEY_DOKEY] = 'StartLevel.ogg', -- Starting game
 	[CHAR_SOUND_LETS_A_GO] = 'levelmecha.ogg', -- Starting level
-	[CHAR_SOUND_PUNCH_YAH] = 'Punch1.ogg', -- Punch 1
-	[CHAR_SOUND_PUNCH_WAH] = 'Punch2.ogg', -- Punch 2
-	[CHAR_SOUND_PUNCH_HOO] = 'Punch3.ogg', -- Punch 3
+	[CHAR_SOUND_PUNCH_YAH] = nil, -- Punch 1
+	[CHAR_SOUND_PUNCH_WAH] = nil, -- Punch 2
+	[CHAR_SOUND_PUNCH_HOO] = nil, -- Punch 3
 	[CHAR_SOUND_YAH_WAH_HOO] = nil, -- First/Second jump sounds
 	[CHAR_SOUND_HOOHOO] = nil, -- Third jump sound
 	[CHAR_SOUND_YAHOO_WAHA_YIPPEE] = nil, -- Triple jump sounds
@@ -143,16 +143,6 @@ local healthMeter = {
     [8] = get_texture_info("metalhud-8"),
     }
 }
-local rolllockSpindash
-function rolllock(msg)
-    if msg == "true" then
-        rolllockSpindash = METAL_SONIC_JUMP
-        return true
-    elseif msg == "false" then
-        rolllockSpindash = ACT_JUMP
-        return true
-    end
-end
 gStateExtras = {}
 for i = 0, (MAX_PLAYERS - 1) do
     gStateExtras[i] = {}
@@ -167,16 +157,12 @@ local math_sqrt, math_min, math_max, math_floor = math.sqrt, math.min, math.max,
 local function limit_angle(a)
     return (a + 0x8000) % 0x10000 - 0x8000
 end
-local peeloutrelease = audio_sample_load("peeloutrelease.mp3")
-local peeloutcharge = audio_sample_load("peeloutcharge.ogg")
-local jumpsound = audio_sample_load("jump.ogg")
+local peelRelease = audio_sample_load("PeelRelease.ogg")
+local jumpsound = audio_sample_load("cdjump.ogg")
 ACT_METAL_CROUCH = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX)
 ACT_METAL_CHARGE = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_INVULNERABLE | ACT_FLAG_ATTACKING)
 ACT_METAL_SLIDE = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE)
-local spindashInput = Z_TRIG
 CHAR_ANIM_SONIC_SLIDE = 140
-local peeloutcharge = audio_sample_load("peeloutcharge.ogg")
-local peeloutrelease = audio_sample_load("peeloutrelease.mp3")
 gStateExtras = {}
 for i = 0, (MAX_PLAYERS - 1) do
     gStateExtras[i] = {}
@@ -185,31 +171,27 @@ for i = 0, (MAX_PLAYERS - 1) do
     local s = gPlayerSyncTable[i]
     e.spincharge = 0
     e.animFrame = 0
-end
-
-local math_sqrt, math_min, math_max, math_floor = math.sqrt, math.min, math.max, math.floor
-
-local function limit_angle(a)
-    return (a + 0x8000) % 0x10000 - 0x8000
 end
 
 local m = gMarioStates[0]
 local e = gStateExtras[m.playerIndex]
 local b = m.marioBodyState
 e.animFrame = 0
-e.spincharge = 0
+e.spincharge = 100
 function act_sonic_charge(m)
     stationary_ground_step(m)
-    if m.controller.buttonPressed ~= B_BUTTON and e.spincharge < 10 then
-      set_mario_action(m, ACT_STOP_CROUCHING, 0)
-    elseif m.controller.buttonPressed ~= B_BUTTON and e.spincharge > 9 then
+    if m.controller.buttonPressed ~= B_BUTTON and e.spincharge > 9 then
       set_mario_action(m, ACT_METAL_SLIDE, 0)
+      audio_sample_play(peelRelease, m.pos, 1)
       m.forwardVel = e.spincharge*1.1
     end
       e.spincharge = e.spincharge + 10
-      if e.spincharge > 100 then
+      if e.spincharge > 100 and METAL_SONIC == charSelect.character_get_current_number() then
          e.spincharge = 100
       end
+      if e.spincharge > 100 and MECHA_SONIC_MK2 == charSelect.character_get_current_number() then
+        e.spincharge = 50
+     end
       if e.spincharge > 0 then
          e.spincharge = e.spincharge - 1
       end
@@ -232,10 +214,8 @@ function act_sonic_slide(m)
 	end
 
     local stepResult = perform_ground_step(m)
-    if stepResult == GROUND_STEP_LEFT_GROUND then
-        set_mario_action(m, ACT_FREEFALL, 99)
-	elseif stepResult == GROUND_STEP_HIT_WALL then
-		set_mario_action(m, ACT_WALKING, 1)
+	if stepResult == GROUND_STEP_HIT_WALL and m.forwardVel >= 20 then
+		set_mario_action(m, ACT_GROUND_BONK, 1)
 		m.particleFlags = m.particleFlags | PARTICLE_VERTICAL_STAR
         play_sound(SOUND_ACTION_HIT, m.marioObj.header.gfx.cameraToObject)
     end
@@ -251,7 +231,7 @@ function act_sonic_slide(m)
 	end
 
 	if (m.input & INPUT_A_PRESSED) ~= 0 then
-		set_mario_action(m, METAL_SONIC_JUMP, 0)
+		set_mario_action(m, ACT_JUMP, 0)
 	end
 
 	m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x600, 0x600)
@@ -277,7 +257,7 @@ function convert_s16(num)
     end
     return num
 end
-
+local dropdash = audio_sample_load("dropdash.ogg")
 local METAL_SONIC_JUMP = allocate_mario_action(
 ACT_GROUP_AIRBORNE | ACT_FLAG_MOVING | ACT_FLAG_AIR | ACT_FLAG_CONTROL_JUMP_HEIGHT | ACT_FLAG_ALLOW_VERTICAL_WIND_ACTION | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_ATTACKING)
 function metal_jump(m)
@@ -286,27 +266,33 @@ function metal_jump(m)
         audio_sample_play(jumpsound, m.pos, 1)
         set_character_animation(m, CHAR_ANIM_A_POSE)
         smlua_anim_util_set_animation(mo, "JUMPBALL_METAL")
-        m.vel.y = 50
-    elseif (m.pos.y <= m.floorHeight)then
+        m.vel.y = 60
+    elseif m.controller.buttonPressed == B_BUTTON and METAL_SONIC == charSelect.character_get_current_number() then
+        audio_sample_play(dropdash, m.pos, 1)
+        set_mario_action(m, ACT_METAL_CHARGE, 0)
+    elseif (m.pos.y <= m.floorHeight) then
         m.action = ACT_JUMP_LAND
     end
     perform_air_step(m,0)
     m.actionTimer = m.actionTimer + 1
 end
 
-function on_metal_jump(m)
+function on_metal_jump()
     local m = gMarioStates[0]
     if m.playerIndex ~= 0 then return end
     if (m.action == ACT_JUMP or m.action == ACT_TRIPLE_JUMP) then
         set_mario_action(m, METAL_SONIC_JUMP, 0)
-    --elseif (m.controller.buttonPressed == Z_TRIG) then
-    --    set_mario_action(m, ACT_GROUND_POUND, 0)
+    elseif (m.controller.buttonPressed == Z_TRIG and m.action ~= ACT_GROUND_POUND and m.action & ACT_FLAG_AIR ~= 0) then
+        set_mario_action(m, ACT_GROUND_POUND, 0)
+    end
+    if m.action == ACT_GROUND_POUND then
+        smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
     end
 end
 hook_mario_action(METAL_SONIC_JUMP, metal_jump)
 
 
-function noSwimAllowed(m)
+function noSwimAllowed()
     local m = gMarioStates[0]
     if ((m.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) then
         m.flags = m.flags | MARIO_METAL_CAP
@@ -315,24 +301,27 @@ function noSwimAllowed(m)
     end
 end
 
-function on_fall(m)
+function on_fall()
     local m = gMarioStates[0]
     if m.playerIndex ~= 0 then return end
     m.peakHeight = m.pos.y
 end
 function use_spindash(m)
     if m.playerIndex ~= 0 then return end
-    if m.controller.buttonPressed == B_BUTTON then
+    if (m.action == ACT_MOVE_PUNCHING or m.action == ACT_PUNCHING or m.action == ACT_DIVE) and METAL_SONIC == charSelect.character_get_current_number() then
+        set_mario_action(m, ACT_METAL_CHARGE, 0)
+    elseif m.controller.buttonPressed == B_BUTTON and MECHA_SONIC_MK2 == charSelect.character_get_current_number() and m.action & ACT_GROUP_AIRBORNE == 0 then
         set_mario_action(m, ACT_METAL_CHARGE, 0)
     end
 end
 
+
 function hook_moves_lmao(m)
     if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
-        on_metal_jump(m)
-        noSwimAllowed(m)
+        on_metal_jump()
+        noSwimAllowed()
         use_spindash(m)
-        on_fall(m)
+        on_fall()
     end
 end
 local CSloaded = false
@@ -355,8 +344,8 @@ function on_character_select_load()
         disable_breath_heal = true,
         knock_back_resistance = 50,
         walking_speed = 200,
-        in_air_speed = 200,
-	peel_out_on = true,})
+            in_air_speed = 200,
+        peel_out_on = true,})
         _G.customMoves.character_add({
         name = "Mecha Sonic MK2",
         disable_burning = true,
@@ -364,8 +353,8 @@ function on_character_select_load()
         disable_breath_heal = true,
         knock_back_resistance = 50,
         walking_speed = 200,
-        in_air_speed = 200,
-	peel_out_on = true,})
+            in_air_speed = 200,
+        peel_out_on = true,})
     end
     _G.charSelect.character_add_health_meter(METAL_SONIC, healthMeter)
     CSloaded = true
@@ -382,8 +371,6 @@ local function on_character_snore(m)
     if _G.charSelect.character_get_voice(m) == VOICE_METAL then return _G.charSelect.voice.snore(m) end
     if _G.charSelect.character_get_voice(m) == VOICE_MECHA then return _G.charSelect.voice.snore(m) end
 end
-hook_chat_command("rolllock", "true/false, enables or disables rolllock for Metal Sonic", rolllock)
-hook_event(HOOK_MARIO_UPDATE, on_fall)
 hook_event(HOOK_ON_MODS_LOADED, on_character_select_load)
 hook_event(HOOK_CHARACTER_SOUND, on_character_sound)
 hook_event(HOOK_MARIO_UPDATE, on_character_snore)
