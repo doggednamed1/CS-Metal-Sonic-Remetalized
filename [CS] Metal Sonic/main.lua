@@ -291,11 +291,14 @@ function on_metal_jump()
 end
 hook_mario_action(METAL_SONIC_JUMP, metal_jump)
 
-
+--- @param m MarioState
 function noSwimAllowed()
-    local m = gMarioStates[0]
+    if (m.flags & MARIO_METAL_CAP) ~= 0 and m.capTimer ~= 0 then return end
+
     if ((m.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) then
         m.flags = m.flags | MARIO_METAL_CAP
+        -- stop rendering as metal cap
+        m.marioBodyState.modelState = m.marioBodyState.modelState & ~MODEL_STATE_METAL
     else
         m.flags = m.flags & ~MARIO_METAL_CAP
     end
@@ -316,10 +319,11 @@ function use_spindash(m)
 end
 
 
+--- @param m MarioState
 function hook_moves_lmao(m)
     if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
         on_metal_jump()
-        noSwimAllowed()
+        noSwimAllowed(m)
         use_spindash(m)
         on_fall()
     end
