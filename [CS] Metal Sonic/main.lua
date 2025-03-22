@@ -18,7 +18,6 @@ end
 local MODEL_METAL_SONIC = smlua_model_util_get_id("metals_geo") -- Located in "actors"
 local MODEL_MECHA_SONIC_MK2 = smlua_model_util_get_id("mechas_geo")
 local TEX_METAL_LIFE_ICON = get_texture_info("metals_icon") -- Located in "textures"
-local MODEL_STAR_EMERALD = smlua_model_util_get_id("star_geo")
 local TEX_MECHA_LIFE_ICON = get_texture_info("mechas_icon")
 local TEX_STAR_ICON = get_texture_info("MasterEmerald")
 -- All Located in "sound"
@@ -118,15 +117,6 @@ local CAPTABLE_CHAR_METAL = {
     metal = smlua_model_util_get_id("metals_metal_geo"),
 }
 
-local PALETTE_CHAR = {
-    [PANTS]  = "ffffff",
-    [SHIRT]  = "ffffff",
-    [GLOVES] = "ffffff",
-    [SHOES]  = "ffffff",
-    [HAIR]   = "ffffff",
-    [SKIN]   = "ffffff",
-    [CAP]    = "00008B",
-}
 local healthMeter = {
     label = {
         left = get_texture_info("metalhud-left"),
@@ -152,16 +142,13 @@ for i = 0, (MAX_PLAYERS - 1) do
     e.spincharge = 0
     e.animFrame = 0
 end
-local math_sqrt, math_min, math_max, math_floor = math.sqrt, math.min, math.max, math.floor
 
-local function limit_angle(a)
-    return (a + 0x8000) % 0x10000 - 0x8000
-end
 local peelRelease = audio_sample_load("PeelRelease.ogg")
 local jumpsound = audio_sample_load("cdjump.ogg")
 ACT_METAL_CROUCH = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX)
 ACT_METAL_CHARGE = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | ACT_FLAG_ALLOW_FIRST_PERSON | ACT_FLAG_PAUSE_EXIT | ACT_FLAG_SHORT_HITBOX | ACT_FLAG_INVULNERABLE | ACT_FLAG_ATTACKING)
-ACT_METAL_SLIDE = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE)
+ACT_METAL_SLIDE = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE  | ACT_FLAG_RIDING_SHELL)
+ACT_METAL_SLIDE_AIR = allocate_mario_action( ACT_FLAG_AIR | ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE  | ACT_FLAG_RIDING_SHELL)
 CHAR_ANIM_SONIC_SLIDE = 140
 gStateExtras = {}
 for i = 0, (MAX_PLAYERS - 1) do
@@ -207,28 +194,65 @@ end
 local e = gStateExtras[m.playerIndex]
 e.animFrame = 0
 m.marioObj.header.gfx.animInfo.curAnim.loopEnd = 0
+
+--- @param m MarioState
+local function update_sonic_slide_animation(m)
+	if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
+		e.animFrame = e.animFrame - m.marioObj.header.gfx.animInfo.curAnim.loopEnd
+	end
+	e.animFrame = e.animFrame + 2 * (m.forwardVel / 95)
+	smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
+	set_anim_to_frame(m, e.animFrame)
+    
+end
+
+--- @param m MarioState
+--- @return boolean
+function act_sonic_slide_above_water(m)
+    if(m.floorHeight <= m.waterLevel) then
+        play_sound(SOUND_MOVING_TERRAIN_RIDING_SHELL + m.terrainSoundAddend, m.marioObj.header.gfx.cameraToObject)
+        set_mario_particle_flags(m, PARTICLE_SHALLOW_WATER_WAVE, 0)
+        if m.forwardVel < 15 then
+            set_mario_action(m, ACT_IDLE, 0)
+            return true
+        end
+    end
+    return false
+end
+
+--- @param m MarioState
+--- @return boolean
+function act_sonic_slide_above_lava(m)
+    if( m.floor ~= nil and m.floor.type == SURFACE_BURNING) then
+        mario_set_forward_vel(m, m.forwardVel - 1.75)
+       if m.forwardVel < 25 then
+           set_mario_action(m, ACT_IDLE, 0)
+           return true
+       end
+    end
+    return false
+end
+
+--- @param m MarioState
 function act_sonic_slide(m)
 	mario_set_forward_vel(m, m.forwardVel - 0.5)
-	if m.forwardVel < 1 then
-		set_mario_action(m, ACT_IDLE, 0)
-	end
+
+
+    local changedAction = act_sonic_slide_above_water(m) or act_sonic_slide_above_lava(m)
+    if changedAction then return end
+
+    adjust_sound_for_speed(m)
 
     local stepResult = perform_ground_step(m)
 	if stepResult == GROUND_STEP_HIT_WALL and m.forwardVel >= 20 then
 		set_mario_action(m, ACT_GROUND_BONK, 1)
 		m.particleFlags = m.particleFlags | PARTICLE_VERTICAL_STAR
         play_sound(SOUND_ACTION_HIT, m.marioObj.header.gfx.cameraToObject)
+    elseif stepResult == GROUND_STEP_LEFT_GROUND then
+        set_mario_action(m,ACT_METAL_SLIDE_AIR,0)
     end
-	m.particleFlags = m.particleFlags | PARTICLE_DUST
 
-	if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
-		if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
-			e.animFrame = e.animFrame - m.marioObj.header.gfx.animInfo.curAnim.loopEnd
-		end
-		e.animFrame = e.animFrame + 2 * (m.forwardVel / 95)
-		smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
-		set_anim_to_frame(m, e.animFrame)
-	end
+	update_sonic_slide_animation(m)
 
 	if (m.input & INPUT_A_PRESSED) ~= 0 then
 		set_mario_action(m, ACT_JUMP, 0)
@@ -239,12 +263,30 @@ function act_sonic_slide(m)
     if (m.input & INPUT_ABOVE_SLIDE) ~= 0 then
         return set_mario_action(m, ACT_WALKING, 0)
     end
-
-    m.actionTimer = m.actionTimer + 1
-    return
 end
 hook_mario_action(ACT_METAL_CHARGE, act_sonic_charge)
 hook_mario_action(ACT_METAL_SLIDE, act_sonic_slide, INT_KICK)
+
+
+--- @param m MarioState
+function act_sonic_slide_air(m)
+    update_sonic_slide_animation(m)
+    update_air_without_turn(m);
+
+    local step = perform_air_step(m, 0)
+    if step == AIR_STEP_LANDED then
+        set_mario_action(m, ACT_METAL_SLIDE, 0);
+    elseif step == AIR_STEP_HIT_WALL and m.forwardVel >= 20 then
+        set_mario_action(m, ACT_BACKWARD_GROUND_KB, 1)
+        m.particleFlags = m.particleFlags | PARTICLE_VERTICAL_STAR
+        play_sound(SOUND_ACTION_HIT, m.marioObj.header.gfx.cameraToObject)
+    elseif step == AIR_STEP_HIT_LAVA_WALL then
+        lava_boost_on_wall(m);
+    end
+
+end
+
+hook_mario_action(ACT_METAL_SLIDE_AIR, act_sonic_slide_air, INT_KICK)
 
 function convert_s16(num)
     local min = -32768
@@ -297,11 +339,12 @@ function noSwimAllowed()
 
     if ((m.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) then
         m.flags = m.flags | MARIO_METAL_CAP
-        -- stop rendering as metal cap
-        m.marioBodyState.modelState = m.marioBodyState.modelState & ~MODEL_STATE_METAL
     else
         m.flags = m.flags & ~MARIO_METAL_CAP
     end
+
+    -- stop rendering as metal cap
+    m.marioBodyState.modelState = m.marioBodyState.modelState & ~MODEL_STATE_METAL
 end
 
 function on_fall()
