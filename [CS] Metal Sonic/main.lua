@@ -297,11 +297,12 @@ function noSwimAllowed()
 
     if ((m.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) then
         m.flags = m.flags | MARIO_METAL_CAP
-        -- stop rendering as metal cap
-        m.marioBodyState.modelState = m.marioBodyState.modelState & ~MODEL_STATE_METAL
     else
         m.flags = m.flags & ~MARIO_METAL_CAP
     end
+
+    -- stop rendering as metal cap
+    m.marioBodyState.modelState = m.marioBodyState.modelState & ~MODEL_STATE_METAL
 end
 
 function on_fall()
