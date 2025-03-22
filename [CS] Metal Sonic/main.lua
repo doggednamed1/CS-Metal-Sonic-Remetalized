@@ -246,11 +246,27 @@ function act_sonic_slide_above_lava(m)
 end
 
 --- @param m MarioState
+--- @param startYaw number
+local function tilt_sonic_slide(m,startYaw)
+    local dYaw = m.faceAngle.y - startYaw;
+    local val02 = -convert_s16(dYaw * m.forwardVel * 5);
+
+    val02 = math.min(1365,val02)
+    val02 = math.max(-1365,val02)
+    m.marioObj.header.gfx.angle.z= approach_s32(m.marioObj.header.gfx.angle.x, val02, 1365, 1365);
+end
+
+--- @param m MarioState
 function act_sonic_slide(m)
+    local startYaw = m.faceAngle.y
 	mario_set_forward_vel(m, m.forwardVel - 0.5)
 
     local changedAction = act_sonic_slide_above_water(m) or act_sonic_slide_above_lava(m)
     if changedAction then return end
+    if m.forwardVel < 1 then
+		set_mario_action(m, ACT_IDLE, 0)
+        return
+	end
 
     adjust_sound_for_speed(m)
 
@@ -270,11 +286,12 @@ function act_sonic_slide(m)
 		set_mario_action(m, ACT_JUMP, 0)
 	end
 
-	m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x600, 0x600)
+	m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x6000, 0x6000)
 
     if (m.input & INPUT_ABOVE_SLIDE) ~= 0 then
         return set_mario_action(m, ACT_WALKING, 0)
     end
+    tilt_sonic_slide(m,startYaw)
 end
 hook_mario_action(ACT_METAL_CHARGE, act_sonic_charge)
 hook_mario_action(ACT_METAL_SLIDE, act_sonic_slide, INT_KICK)
