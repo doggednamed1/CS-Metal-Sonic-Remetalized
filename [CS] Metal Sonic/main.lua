@@ -136,10 +136,7 @@ local healthMeter = {
 gStateExtras = {}
 for i = 0, (MAX_PLAYERS - 1) do
     gStateExtras[i] = {}
-    local m = gMarioStates[i]
     local e = gStateExtras[i]
-    local s = gPlayerSyncTable[i]
-    e.spincharge = 0
     e.animFrame = 0
 end
 
@@ -150,45 +147,60 @@ ACT_METAL_CHARGE = allocate_mario_action(ACT_GROUP_STATIONARY | ACT_FLAG_IDLE | 
 ACT_METAL_SLIDE = allocate_mario_action(ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE  | ACT_FLAG_RIDING_SHELL)
 ACT_METAL_SLIDE_AIR = allocate_mario_action( ACT_FLAG_AIR | ACT_GROUP_MOVING | ACT_FLAG_MOVING | ACT_FLAG_ATTACKING | ACT_FLAG_INVULNERABLE  | ACT_FLAG_RIDING_SHELL)
 CHAR_ANIM_SONIC_SLIDE = 140
-gStateExtras = {}
-for i = 0, (MAX_PLAYERS - 1) do
-    gStateExtras[i] = {}
-    local m = gMarioStates[i]
-    local e = gStateExtras[i]
-    local s = gPlayerSyncTable[i]
-    e.spincharge = 0
-    e.animFrame = 0
+
+
+--- @param m MarioState
+local function spawn_terrain_particles(m)
+
+    if (m.terrainSoundAddend == (SOUND_TERRAIN_WATER << 16)) then
+        set_mario_particle_flags(m, PARTICLE_SHALLOW_WATER_SPLASH, 0);
+    else
+        if (m.terrainSoundAddend == (SOUND_TERRAIN_SAND << 16)) then
+            set_mario_particle_flags(m, PARTICLE_DIRT, 0);
+        elseif (m.terrainSoundAddend == (SOUND_TERRAIN_SNOW << 16)) then
+            set_mario_particle_flags(m, PARTICLE_SNOW, 0);
+        else
+            set_mario_particle_flags(m, PARTICLE_DIRT, 0);
+        end
+    end
+end
+
+--- @param m MarioState
+local function spawn__sonic_charge_particles(m)
+    spawn_terrain_particles(m)
+    set_mario_particle_flags(m, PARTICLE_DUST, 0);
 end
 
 local m = gMarioStates[0]
 local e = gStateExtras[m.playerIndex]
-local b = m.marioBodyState
 e.animFrame = 0
-e.spincharge = 100
+--- @param m MarioState
 function act_sonic_charge(m)
     stationary_ground_step(m)
-    if m.controller.buttonPressed ~= B_BUTTON and e.spincharge > 9 then
-      set_mario_action(m, ACT_METAL_SLIDE, 0)
-      audio_sample_play(peelRelease, m.pos, 1)
-      m.forwardVel = e.spincharge*1.1
+    if (m.controller.buttonDown & B_BUTTON) == 0 and m.actionArg > 9 then
+        m.forwardVel =  m.actionArg * 1.1
+        set_mario_action(m, ACT_METAL_SLIDE, 0)
+        audio_sample_play(peelRelease, m.pos, 1)
+        set_mario_particle_flags(m, PARTICLE_MIST_CIRCLE,0)
+        return
     end
-      e.spincharge = e.spincharge + 10
-      if e.spincharge > 100 and METAL_SONIC == charSelect.character_get_current_number() then
-         e.spincharge = 100
-      end
-      if e.spincharge > 100 and MECHA_SONIC_MK2 == charSelect.character_get_current_number() then
-        e.spincharge = 50
-     end
-      if e.spincharge > 0 then
-         e.spincharge = e.spincharge - 1
-      end
-      smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
-      e.animFrame = e.animFrame + 1 + e.spincharge/150
-      if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
+    m.actionArg = m.actionArg + 10
+    if m.actionArg > 120 and is_metal_sonic(m) then
+        m.actionArg = 120
+    end
+    if m.actionArg > 135 and is_mk2(m) then
+        m.actionArg = 135
+    end
+
+    smlua_anim_util_set_animation(m.marioObj, "JUMPBALL_METAL")
+    e.animFrame = e.animFrame + 1 + m.actionArg/150
+    if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
 	     e.animFrame = 0
   	end
-      set_anim_to_frame(m, e.animFrame)
-
+    set_anim_to_frame(m, e.animFrame)
+    spawn__sonic_charge_particles(m)
+    print(m.marioObj.header.gfx.angle.x)
+    m.marioObj.header.gfx.angle.x = 0x8000/6
     return 0
 end
 local e = gStateExtras[m.playerIndex]
@@ -237,7 +249,6 @@ end
 function act_sonic_slide(m)
 	mario_set_forward_vel(m, m.forwardVel - 0.5)
 
-
     local changedAction = act_sonic_slide_above_water(m) or act_sonic_slide_above_lava(m)
     if changedAction then return end
 
@@ -251,6 +262,7 @@ function act_sonic_slide(m)
     elseif stepResult == GROUND_STEP_LEFT_GROUND then
         set_mario_action(m,ACT_METAL_SLIDE_AIR,0)
     end
+    m.particleFlags = m.particleFlags | PARTICLE_DUST
 
 	update_sonic_slide_animation(m)
 
@@ -309,9 +321,9 @@ function metal_jump(m)
         set_character_animation(m, CHAR_ANIM_A_POSE)
         smlua_anim_util_set_animation(mo, "JUMPBALL_METAL")
         m.vel.y = 60
-    elseif m.controller.buttonPressed == B_BUTTON and METAL_SONIC == charSelect.character_get_current_number() then
+    elseif m.controller.buttonPressed == B_BUTTON and is_metal_sonic(m) then
         audio_sample_play(dropdash, m.pos, 1)
-        set_mario_action(m, ACT_METAL_CHARGE, 0)
+        set_mario_action(m, ACT_METAL_CHARGE, 90)
     elseif (m.pos.y <= m.floorHeight) then
         m.action = ACT_JUMP_LAND
     end
@@ -334,7 +346,7 @@ end
 hook_mario_action(METAL_SONIC_JUMP, metal_jump)
 
 --- @param m MarioState
-function noSwimAllowed()
+function noSwimAllowed(m)
     if (m.flags & MARIO_METAL_CAP) ~= 0 and m.capTimer ~= 0 then return end
 
     if ((m.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) then
@@ -354,17 +366,28 @@ function on_fall()
 end
 function use_spindash(m)
     if m.playerIndex ~= 0 then return end
-    if (m.action == ACT_MOVE_PUNCHING or m.action == ACT_PUNCHING or m.action == ACT_DIVE) and METAL_SONIC == charSelect.character_get_current_number() then
-        set_mario_action(m, ACT_METAL_CHARGE, 0)
-    elseif m.controller.buttonPressed == B_BUTTON and MECHA_SONIC_MK2 == charSelect.character_get_current_number() and m.action & ACT_GROUP_AIRBORNE == 0 then
-        set_mario_action(m, ACT_METAL_CHARGE, 0)
+    if (m.action == ACT_MOVE_PUNCHING or m.action == ACT_PUNCHING or m.action == ACT_DIVE) and is_metal_sonic(m) then
+        set_mario_action(m, ACT_METAL_CHARGE, 90)
+    elseif (m.action == ACT_MOVE_PUNCHING or m.action == ACT_PUNCHING or m.action == ACT_DIVE) and is_mk2(m) then
+        set_mario_action(m, ACT_METAL_CHARGE, 80)
     end
 end
 
+--- @param m MarioState
+--- @return boolean
+function is_metal_sonic(m)
+    return METAL_SONIC == charSelect.character_get_current_number()
+end
+
+--- @param m MarioState
+--- @return boolean
+function is_mk2(m)
+    return MECHA_SONIC_MK2 == charSelect.character_get_current_number()
+end
 
 --- @param m MarioState
 function hook_moves_lmao(m)
-    if METAL_SONIC == _G.charSelect.character_get_current_number() or MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number() then
+    if is_metal_sonic(m) or is_mk2(m) then
         on_metal_jump()
         noSwimAllowed(m)
         use_spindash(m)
