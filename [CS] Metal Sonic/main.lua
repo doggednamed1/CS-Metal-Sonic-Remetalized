@@ -266,8 +266,9 @@ function act_sonic_slide(m)
 end
 hook_mario_action(ACT_METAL_CHARGE, act_sonic_charge)
 hook_mario_action(ACT_METAL_SLIDE, act_sonic_slide, INT_KICK)
-
-
+if _G.doorBust then
+	_G.doorBust.add_door_bust_action(ACT_METAL_SLIDE)
+end
 --- @param m MarioState
 function act_sonic_slide_air(m)
     update_sonic_slide_animation(m)
