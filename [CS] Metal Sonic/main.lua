@@ -264,6 +264,10 @@ end
 function act_sonic_slide(m)
     local startYaw = m.faceAngle.y
 	mario_set_forward_vel(m, m.forwardVel - 0.5)
+    if (m.controller.buttonDown & B_BUTTON) ~= 0 and m.forwardVel < 70 and m.floorHeight > m.waterLevel and ( m.floor ~= nil and m.floor.type == SURFACE_BURNING) == false then
+        m.forwardVel = 120
+        audio_sample_play(peelRelease, m.pos, 0.5)
+    end
 
     local changedAction = act_sonic_slide_above_water(m) or act_sonic_slide_above_lava(m)
     if changedAction then return end
