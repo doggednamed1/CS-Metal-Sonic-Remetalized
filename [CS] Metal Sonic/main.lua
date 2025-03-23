@@ -185,6 +185,9 @@ function act_sonic_charge(m)
         return
     end
     m.actionArg = m.actionArg + 10
+    if is_mk2(m) then
+        m.actionArg = m.actionArg + 10
+    end
     if m.actionArg > 120 and is_metal_sonic(m) then
         m.actionArg = 120
     end
@@ -199,7 +202,8 @@ function act_sonic_charge(m)
   	end
     set_anim_to_frame(m, e.animFrame)
     spawn__sonic_charge_particles(m)
-    print(m.marioObj.header.gfx.angle.x)
+
+    m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, 0x800/10, 0x800/10)
     m.marioObj.header.gfx.angle.x = 0x8000/6
     return 0
 end
@@ -208,7 +212,7 @@ e.animFrame = 0
 m.marioObj.header.gfx.animInfo.curAnim.loopEnd = 0
 
 --- @param m MarioState
-local function update_sonic_slide_animation(m)
+function update_sonic_slide_animation(m)
 	if e.animFrame >= m.marioObj.header.gfx.animInfo.curAnim.loopEnd then
 		e.animFrame = e.animFrame - m.marioObj.header.gfx.animInfo.curAnim.loopEnd
 	end
@@ -340,7 +344,8 @@ function metal_jump(m)
         m.vel.y = 60
     elseif m.controller.buttonPressed == B_BUTTON and is_metal_sonic(m) then
         audio_sample_play(dropdash, m.pos, 1)
-        set_mario_action(m, ACT_METAL_CHARGE, 90)
+        set_mario_action(m, ACT_METAL_DROP_DASH, 0)
+        m.vel.y = -90
     elseif (m.pos.y <= m.floorHeight) then
         m.action = ACT_JUMP_LAND
     end
@@ -384,9 +389,9 @@ end
 function use_spindash(m)
     if m.playerIndex ~= 0 then return end
     if (m.action == ACT_MOVE_PUNCHING or m.action == ACT_PUNCHING or m.action == ACT_DIVE) and is_metal_sonic(m) then
-        set_mario_action(m, ACT_METAL_CHARGE, 90)
+        set_mario_action(m, ACT_METAL_CHARGE, 45)
     elseif (m.action == ACT_MOVE_PUNCHING or m.action == ACT_PUNCHING or m.action == ACT_DIVE) and is_mk2(m) then
-        set_mario_action(m, ACT_METAL_CHARGE, 80)
+        set_mario_action(m, ACT_METAL_CHARGE, 30)
     end
 end
 
