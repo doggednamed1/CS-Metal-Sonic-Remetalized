@@ -350,7 +350,7 @@ function metal_jump(m)
     elseif m.controller.buttonPressed == B_BUTTON and is_metal_sonic(m) then
         audio_sample_play(dropdash, m.pos, 1)
         set_mario_action(m, ACT_METAL_DROP_DASH, 0)
-        m.vel.y = -90
+        m.vel.y = -50
     elseif (m.pos.y <= m.floorHeight) then
         m.action = ACT_JUMP_LAND
     end

@@ -9,7 +9,7 @@ function act_metal_drop_dash(m)
     local step = perform_air_step(m, 0)
     if step == AIR_STEP_LANDED then
         print("heldObjLastPosition")
-        set_mario_action(m, ACT_METAL_CHARGE, 90);
+        set_mario_action(m, ACT_METAL_SLIDE, 90);
     elseif step == AIR_STEP_HIT_WALL then
         set_mario_action(m, ACT_BACKWARD_GROUND_KB, 1)
         m.particleFlags = m.particleFlags | PARTICLE_VERTICAL_STAR
