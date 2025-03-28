@@ -1,4 +1,4 @@
--- name:[CS] The Metal Initiative V2
+-- name:[CS] The Metal Initiative
 -- description:\\#ff7777\\This Pack requires Character Select\nto use as a Library!\nas well as Easy Custom Movesets for the full character pack
 --[[
     API Documentation for Character Select can be found below:
