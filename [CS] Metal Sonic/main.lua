@@ -208,8 +208,6 @@ function act_sonic_charge(m)
     return 0
 end
 local e = gStateExtras[m.playerIndex]
-e.animFrame = 0
-m.marioObj.header.gfx.animInfo.curAnim.loopEnd = 0
 
 --- @param m MarioState
 function update_sonic_slide_animation(m)
@@ -403,13 +401,13 @@ end
 --- @param m MarioState
 --- @return boolean
 function is_metal_sonic(m)
-    return METAL_SONIC == charSelect.character_get_current_number()
+    return METAL_SONIC == _G.charSelect.character_get_current_number()
 end
 
 --- @param m MarioState
 --- @return boolean
 function is_mk2(m)
-    return MECHA_SONIC_MK2 == charSelect.character_get_current_number()
+    return MECHA_SONIC_MK2 == _G.charSelect.character_get_current_number()
 end
 
 --- @param m MarioState
@@ -421,16 +419,15 @@ function hook_moves_lmao(m)
         on_fall()
     end
 end
-local CSloaded = false
-function on_character_select_load()
+
     METAL_SONIC = _G.charSelect.character_add("Metal Sonic", {"The Blue Blur's robotic doppleganger", "M&S Winter Olympic Games DS"}, "Luogi, Warioplier for model, Darkly for code", {r = 0, g = 0, b = 200}, MODEL_METAL_SONIC, CT_MARIO, TEX_METAL_LIFE_ICON)
-    MECHA_SONIC_MK2 = charSelect.character_add("Mecha Sonic MK2", {"The scourge of Mobius AND the Mushroom Kingdom!", "Custom Model by: Tromak"}, "Luogi, Garrulous64 for model, Darkly for code", {r = 0, g = 0, b = 200}, MODEL_MECHA_SONIC_MK2, CT_MARIO, TEX_MECHA_LIFE_ICON)
+    MECHA_SONIC_MK2 = _G.charSelect.character_add("Mecha Sonic MK2", {"The scourge of Mobius AND the Mushroom Kingdom!", "Custom Model by: Tromak"}, "Luogi, Garrulous64 for model, Darkly for code", {r = 0, g = 0, b = 200}, MODEL_MECHA_SONIC_MK2, CT_MARIO, TEX_MECHA_LIFE_ICON)
     _G.charSelect.character_add_caps(MODEL_METAL_SONIC, CAPTABLE_CHAR_METAL)
     _G.charSelect.character_add_caps(MODEL_MECHA_SONIC_MK2, CAPTABLE_CHAR_MECHA)
     _G.charSelect.character_add_voice(MODEL_MECHA_SONIC_MK2, VOICE_MECHA)
     _G.charSelect.character_add_voice(MODEL_METAL_SONIC, VOICE_METAL)
-    _G.charSelect.character_hook_moveset(MECHA_SONIC_MK2, HOOK_MARIO_UPDATE, hook_moves_lmao)
-    _G.charSelect.character_hook_moveset(METAL_SONIC, HOOK_MARIO_UPDATE, hook_moves_lmao)
+    hook_event(HOOK_MARIO_UPDATE, hook_moves_lmao)
+    hook_event(HOOK_MARIO_UPDATE, hook_moves_lmao)
     _G.charSelect.character_add_celebration_star(MODEL_METAL_SONIC, nil, TEX_STAR_ICON)
     _G.charSelect.character_add_celebration_star(MODEL_MECHA_SONIC_MK2, nil, TEX_STAR_ICON)
     if _G.customMovesExists then
@@ -454,8 +451,7 @@ function on_character_select_load()
         peel_out_on = true,})
     end
     _G.charSelect.character_add_health_meter(METAL_SONIC, healthMeter)
-    CSloaded = true
-end
+
 
 local function on_character_sound(m, sound)
     if not CSloaded then return end
@@ -468,6 +464,5 @@ local function on_character_snore(m)
     if _G.charSelect.character_get_voice(m) == VOICE_METAL then return _G.charSelect.voice.snore(m) end
     if _G.charSelect.character_get_voice(m) == VOICE_MECHA then return _G.charSelect.voice.snore(m) end
 end
-hook_event(HOOK_ON_MODS_LOADED, on_character_select_load)
 hook_event(HOOK_CHARACTER_SOUND, on_character_sound)
 hook_event(HOOK_MARIO_UPDATE, on_character_snore)
